@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, ScanLine, Plus } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/products";
+const API_URL =
+  "https://smartshop-pos-backend-e0hw.onrender.com/api/products";
 
 function ProductSearch({ onAddToCart }) {
   const [products, setProducts] = useState([]);

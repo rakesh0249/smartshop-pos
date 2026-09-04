@@ -9,7 +9,21 @@ import {
   PackageMinus,
 } from "lucide-react";
 
-const API_URL = "https://smartshop-pos-backend-e0hw.onrender.com";
+const API_URL =
+  "https://smartshop-pos-backend-e0hw.onrender.com/api/products";
+
+// Safe JSON response handler
+const getResponseData = async (response) => {
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Server returned an invalid response (${response.status})`
+    );
+  }
+};
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -43,21 +57,25 @@ function Products() {
 
       const response = await fetch(API_URL);
 
+      const data = await getResponseData(response);
+
       if (!response.ok) {
-        throw new Error("Failed to fetch products");
+        throw new Error(
+          data?.message || "Failed to fetch products"
+        );
       }
 
-     
-      const data = await response.json();
       if (Array.isArray(data)) {
         setProducts(data);
       } else {
         console.error("Invalid products response:", data);
         setProducts([]);
+        throw new Error("Invalid products response from server");
       }
     } catch (error) {
       console.error("Fetch Products Error:", error);
-      alert("Failed to load products");
+      setProducts([]);
+      alert(error.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -121,30 +139,22 @@ function Products() {
         barcode: form.barcode.trim(),
       };
 
+      let response;
+
       // ADD PRODUCT
       if (!editingId) {
-        const response = await fetch(API_URL, {
+        response = await fetch(API_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(productData),
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Failed to add product"
-          );
-        }
-
-        alert("Product added successfully ✅");
       }
 
       // UPDATE PRODUCT
       else {
-        const response = await fetch(
+        response = await fetch(
           `${API_URL}/${editingId}`,
           {
             method: "PUT",
@@ -154,24 +164,30 @@ function Products() {
             body: JSON.stringify(productData),
           }
         );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Failed to update product"
-          );
-        }
-
-        alert("Product updated successfully ✅");
       }
 
-      await fetchProducts();
+      const data = await getResponseData(response);
 
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            (editingId
+              ? "Failed to update product"
+              : "Failed to add product")
+        );
+      }
+
+      alert(
+        editingId
+          ? "Product updated successfully ✅"
+          : "Product added successfully ✅"
+      );
+
+      await fetchProducts();
       resetForm();
     } catch (error) {
       console.error("Save Product Error:", error);
-      alert(error.message);
+      alert(error.message || "Failed to save product");
     } finally {
       setSaving(false);
     }
@@ -182,11 +198,11 @@ function Products() {
   // =========================
   const handleEdit = (product) => {
     setForm({
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      stock: product.stock,
-      barcode: product.barcode,
+      name: product.name || "",
+      category: product.category || "",
+      price: product.price ?? "",
+      stock: product.stock ?? "",
+      barcode: product.barcode || "",
     });
 
     setEditingId(product._id);
@@ -211,11 +227,11 @@ function Products() {
         }
       );
 
-      const data = await response.json();
+      const data = await getResponseData(response);
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Failed to delete product"
+          data?.message || "Failed to delete product"
         );
       }
 
@@ -224,7 +240,7 @@ function Products() {
       await fetchProducts();
     } catch (error) {
       console.error("Delete Product Error:", error);
-      alert(error.message);
+      alert(error.message || "Failed to delete product");
     }
   };
 
@@ -286,11 +302,11 @@ function Products() {
         }
       );
 
-      const data = await response.json();
+      const data = await getResponseData(response);
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Failed to update stock"
+          data?.message || "Failed to update stock"
         );
       }
 
@@ -301,11 +317,12 @@ function Products() {
       );
 
       await fetchProducts();
-
       closeStockModal();
     } catch (error) {
       console.error("Stock Update Error:", error);
-      alert(error.message);
+      alert(
+        error.message || "Failed to update stock"
+      );
     } finally {
       setStockLoading(false);
     }
@@ -315,7 +332,9 @@ function Products() {
   // Search
   // =========================
   const filteredProducts = products.filter((product) =>
-    `${product.name} ${product.category} ${product.barcode}`
+    `${product.name || ""} ${product.category || ""} ${
+      product.barcode || ""
+    }`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
@@ -357,7 +376,6 @@ function Products() {
           Toolbar
       ========================= */}
       <div className="products-toolbar">
-
         <div className="products-search">
           <Search size={20} />
 
@@ -374,16 +392,13 @@ function Products() {
         <div className="product-count">
           {filteredProducts.length} Products
         </div>
-
       </div>
 
       {/* =========================
           Products Table
       ========================= */}
       <div className="products-table-wrapper">
-
         <table className="products-table">
-
           <thead>
             <tr>
               <th>Product</th>
@@ -396,7 +411,6 @@ function Products() {
           </thead>
 
           <tbody>
-
             {loading ? (
               <tr>
                 <td
@@ -411,23 +425,19 @@ function Products() {
               </tr>
             ) : (
               filteredProducts.map((product) => (
-
                 <tr key={product._id}>
-
                   {/* Product */}
                   <td>
                     <div className="product-name">
-
                       <div className="product-avatar">
                         {product.name
-                          .charAt(0)
+                          ?.charAt(0)
                           .toUpperCase()}
                       </div>
 
                       <strong>
                         {product.name}
                       </strong>
-
                     </div>
                   </td>
 
@@ -445,14 +455,14 @@ function Products() {
 
                   {/* Price */}
                   <td>
-                    ₹{product.price}
+                    ₹{Number(product.price).toFixed(2)}
                   </td>
 
                   {/* Stock */}
                   <td>
                     <span
                       className={
-                        product.stock <= 5
+                        Number(product.stock) <= 5
                           ? "stock low"
                           : "stock"
                       }
@@ -463,7 +473,6 @@ function Products() {
 
                   {/* Actions */}
                   <td>
-
                     <div className="action-buttons">
 
                       {/* Add Stock */}
@@ -517,16 +526,11 @@ function Products() {
                       </button>
 
                     </div>
-
                   </td>
-
                 </tr>
-
               ))
             )}
-
           </tbody>
-
         </table>
 
         {/* No Products */}
@@ -536,23 +540,18 @@ function Products() {
               <p>No products found</p>
             </div>
           )}
-
       </div>
 
       {/* =========================
           Add / Edit Modal
       ========================= */}
       {showForm && (
-
         <div className="modal-overlay">
-
           <div className="product-modal">
 
             {/* Modal Header */}
             <div className="modal-header">
-
               <div>
-
                 <h2>
                   {editingId
                     ? "Edit Product"
@@ -562,7 +561,6 @@ function Products() {
                 <p>
                   Enter product details below
                 </p>
-
               </div>
 
               <button
@@ -571,7 +569,6 @@ function Products() {
               >
                 <X size={22} />
               </button>
-
             </div>
 
             {/* Form */}
@@ -579,10 +576,7 @@ function Products() {
 
               {/* Product Name */}
               <div className="form-group">
-
-                <label>
-                  Product Name
-                </label>
+                <label>Product Name</label>
 
                 <input
                   name="name"
@@ -590,15 +584,11 @@ function Products() {
                   onChange={handleChange}
                   placeholder="e.g. Parle-G Biscuit"
                 />
-
               </div>
 
               {/* Category */}
               <div className="form-group">
-
-                <label>
-                  Category
-                </label>
+                <label>Category</label>
 
                 <input
                   name="category"
@@ -606,17 +596,12 @@ function Products() {
                   onChange={handleChange}
                   placeholder="e.g. Biscuits"
                 />
-
               </div>
 
               {/* Price + Stock */}
               <div className="form-row">
-
                 <div className="form-group">
-
-                  <label>
-                    Selling Price
-                  </label>
+                  <label>Selling Price</label>
 
                   <input
                     type="number"
@@ -626,14 +611,10 @@ function Products() {
                     placeholder="₹0"
                     min="0"
                   />
-
                 </div>
 
                 <div className="form-group">
-
-                  <label>
-                    Stock Quantity
-                  </label>
+                  <label>Stock Quantity</label>
 
                   <input
                     type="number"
@@ -643,17 +624,12 @@ function Products() {
                     placeholder="0"
                     min="0"
                   />
-
                 </div>
-
               </div>
 
               {/* Barcode */}
               <div className="form-group">
-
-                <label>
-                  Barcode
-                </label>
+                <label>Barcode</label>
 
                 <input
                   name="barcode"
@@ -661,12 +637,10 @@ function Products() {
                   onChange={handleChange}
                   placeholder="Enter barcode number"
                 />
-
               </div>
 
               {/* Actions */}
               <div className="modal-actions">
-
                 <button
                   type="button"
                   className="cancel-btn"
@@ -687,31 +661,22 @@ function Products() {
                     ? "Update Product"
                     : "Save Product"}
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       {/* =========================
           Stock Modal
       ========================= */}
       {stockProduct && (
-
         <div className="modal-overlay">
-
           <div className="product-modal stock-modal">
 
             {/* Stock Modal Header */}
             <div className="modal-header">
-
               <div>
-
                 <h2>
                   {stockType === "add"
                     ? "Add Stock"
@@ -721,7 +686,6 @@ function Products() {
                 <p>
                   {stockProduct.name}
                 </p>
-
               </div>
 
               <button
@@ -730,28 +694,20 @@ function Products() {
               >
                 <X size={22} />
               </button>
-
             </div>
 
             {/* Current Stock */}
             <div className="stock-current">
-
-              <span>
-                Current Stock
-              </span>
+              <span>Current Stock</span>
 
               <strong>
                 {stockProduct.stock}
               </strong>
-
             </div>
 
             {/* Quantity */}
             <div className="form-group">
-
-              <label>
-                Quantity
-              </label>
+              <label>Quantity</label>
 
               <input
                 type="number"
@@ -765,12 +721,10 @@ function Products() {
                 placeholder="Enter quantity"
                 autoFocus
               />
-
             </div>
 
             {/* Actions */}
             <div className="modal-actions">
-
               <button
                 type="button"
                 className="cancel-btn"
@@ -792,15 +746,11 @@ function Products() {
                   ? "Add Stock"
                   : "Remove Stock"}
               </button>
-
             </div>
 
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }

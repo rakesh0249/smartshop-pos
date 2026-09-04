@@ -10,8 +10,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const PRODUCTS_API = "http://localhost:5000/api/products";
-const SALES_API = "http://localhost:5000/api/sales";
+const PRODUCTS_API = "https://smartshop-pos-backend-e0hw.onrender.com";
+const SALES_API = "https://smartshop-pos-backend-e0hw.onrender.com";
 
 function Dashboard() {
   const [products, setProducts] = useState([]);

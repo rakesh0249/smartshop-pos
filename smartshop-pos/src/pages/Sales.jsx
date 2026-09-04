@@ -8,7 +8,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/sales";
+const API_URL = "https://smartshop-pos-backend-e0hw.onrender.com";
 
 function Sales() {
   const [sales, setSales] = useState([]);

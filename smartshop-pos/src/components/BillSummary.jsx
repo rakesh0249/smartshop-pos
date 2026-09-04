@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const API_URL = "http://localhost:5000/api/sales";
+const API_URL = "https://smartshop-pos-backend-e0hw.onrender.com";
 
 function BillSummary({
   subtotal,

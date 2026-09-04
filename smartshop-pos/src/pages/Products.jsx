@@ -47,9 +47,14 @@ function Products() {
         throw new Error("Failed to fetch products");
       }
 
+     
       const data = await response.json();
-
-      setProducts(data);
+      if (Array.isArray(data)) {
+        setProducts(data);
+      } else {
+        console.error("Invalid products response:", data);
+        setProducts([]);
+      }
     } catch (error) {
       console.error("Fetch Products Error:", error);
       alert("Failed to load products");

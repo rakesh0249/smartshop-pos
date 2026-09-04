@@ -10,8 +10,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const PRODUCTS_API = "https://smartshop-pos-backend-e0hw.onrender.com";
-const SALES_API = "https://smartshop-pos-backend-e0hw.onrender.com";
+const BASE_API =
+  "https://smartshop-pos-backend-e0hw.onrender.com";
+
+const PRODUCTS_API = `${BASE_API}/api/products`;
+const SALES_API = `${BASE_API}/api/sales`;
 
 function Dashboard() {
   const [products, setProducts] = useState([]);
@@ -28,18 +31,45 @@ function Dashboard() {
           fetch(SALES_API),
         ]);
 
-      if (!productsResponse.ok || !salesResponse.ok) {
-        throw new Error("Failed to load dashboard data");
+      if (
+        !productsResponse.ok ||
+        !salesResponse.ok
+      ) {
+        throw new Error(
+          "Failed to load dashboard data"
+        );
       }
 
-      const productsData = await productsResponse.json();
-      const salesData = await salesResponse.json();
+      const productsData =
+        await productsResponse.json();
 
-      setProducts(productsData);
-      setSales(salesData);
+      const salesData =
+        await salesResponse.json();
+
+      // Make sure API responses are arrays
+      setProducts(
+        Array.isArray(productsData)
+          ? productsData
+          : []
+      );
+
+      setSales(
+        Array.isArray(salesData)
+          ? salesData
+          : []
+      );
     } catch (error) {
-      console.error("Dashboard Error:", error);
-      alert("Failed to load dashboard data");
+      console.error(
+        "Dashboard Error:",
+        error
+      );
+
+      setProducts([]);
+      setSales([]);
+
+      alert(
+        "Failed to load dashboard data"
+      );
     } finally {
       setLoading(false);
     }
@@ -49,13 +79,15 @@ function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  const today = new Date().toLocaleDateString("en-CA");
+  const today =
+    new Date().toLocaleDateString("en-CA");
 
   const todaySales = useMemo(() => {
     return sales.filter((sale) => {
-      const saleDate = new Date(
-        sale.createdAt
-      ).toLocaleDateString("en-CA");
+      const saleDate =
+        new Date(
+          sale.createdAt
+        ).toLocaleDateString("en-CA");
 
       return saleDate === today;
     });
@@ -63,44 +95,52 @@ function Dashboard() {
 
   const todayTotal = todaySales.reduce(
     (total, sale) =>
-      total + Number(sale.grandTotal || 0),
+      total +
+      Number(sale.grandTotal || 0),
     0
   );
 
   const todayBills = todaySales.length;
 
-  const lowStockProducts = products.filter(
-    (product) =>
-      Number(product.stock) <= 10
-  );
+  const lowStockProducts =
+    products.filter(
+      (product) =>
+        Number(product.stock) <= 10
+    );
 
   const cashTotal = todaySales
     .filter(
-      (sale) => sale.paymentMethod === "Cash"
+      (sale) =>
+        sale.paymentMethod === "Cash"
     )
     .reduce(
       (total, sale) =>
-        total + Number(sale.grandTotal || 0),
+        total +
+        Number(sale.grandTotal || 0),
       0
     );
 
   const upiTotal = todaySales
     .filter(
-      (sale) => sale.paymentMethod === "UPI"
+      (sale) =>
+        sale.paymentMethod === "UPI"
     )
     .reduce(
       (total, sale) =>
-        total + Number(sale.grandTotal || 0),
+        total +
+        Number(sale.grandTotal || 0),
       0
     );
 
   const cardTotal = todaySales
     .filter(
-      (sale) => sale.paymentMethod === "Card"
+      (sale) =>
+        sale.paymentMethod === "Card"
     )
     .reduce(
       (total, sale) =>
-        total + Number(sale.grandTotal || 0),
+        total +
+        Number(sale.grandTotal || 0),
       0
     );
 
@@ -117,11 +157,9 @@ function Dashboard() {
 
   return (
     <div className="dashboard-page">
-
       {/* Header */}
 
       <div className="dashboard-header">
-
         <div>
           <h1>Dashboard</h1>
 
@@ -137,15 +175,12 @@ function Dashboard() {
           <RefreshCw size={18} />
           Refresh
         </button>
-
       </div>
 
       {/* Main Stats */}
 
       <div className="dashboard-stats">
-
         <div className="dashboard-card">
-
           <div className="dashboard-icon">
             <IndianRupee size={24} />
           </div>
@@ -157,11 +192,9 @@ function Dashboard() {
               ₹{todayTotal.toFixed(2)}
             </strong>
           </div>
-
         </div>
 
         <div className="dashboard-card">
-
           <div className="dashboard-icon">
             <Receipt size={24} />
           </div>
@@ -173,11 +206,9 @@ function Dashboard() {
               {todayBills}
             </strong>
           </div>
-
         </div>
 
         <div className="dashboard-card">
-
           <div className="dashboard-icon">
             <Package size={24} />
           </div>
@@ -189,11 +220,9 @@ function Dashboard() {
               {products.length}
             </strong>
           </div>
-
         </div>
 
         <div className="dashboard-card warning-card">
-
           <div className="dashboard-icon">
             <AlertTriangle size={24} />
           </div>
@@ -205,17 +234,13 @@ function Dashboard() {
               {lowStockProducts.length}
             </strong>
           </div>
-
         </div>
-
       </div>
 
       {/* Payment Summary */}
 
       <section className="dashboard-section">
-
         <div className="section-heading">
-
           <div>
             <h2>Today's Payments</h2>
 
@@ -223,13 +248,10 @@ function Dashboard() {
               Payment method breakdown
             </p>
           </div>
-
         </div>
 
         <div className="payment-cards">
-
           <div className="payment-card">
-
             <Banknote size={25} />
 
             <div>
@@ -239,11 +261,9 @@ function Dashboard() {
                 ₹{cashTotal.toFixed(2)}
               </strong>
             </div>
-
           </div>
 
           <div className="payment-card">
-
             <Smartphone size={25} />
 
             <div>
@@ -253,11 +273,9 @@ function Dashboard() {
                 ₹{upiTotal.toFixed(2)}
               </strong>
             </div>
-
           </div>
 
           <div className="payment-card">
-
             <CreditCard size={25} />
 
             <div>
@@ -267,23 +285,17 @@ function Dashboard() {
                 ₹{cardTotal.toFixed(2)}
               </strong>
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* Bottom Grid */}
 
       <div className="dashboard-grid">
-
         {/* Recent Sales */}
 
         <section className="dashboard-section">
-
           <div className="section-heading">
-
             <div>
               <h2>Recent Sales</h2>
 
@@ -291,7 +303,6 @@ function Dashboard() {
                 Latest transactions
               </p>
             </div>
-
           </div>
 
           {recentSales.length === 0 ? (
@@ -301,9 +312,7 @@ function Dashboard() {
             </div>
           ) : (
             <div className="recent-sales">
-
               {recentSales.map((sale) => {
-
                 const date = new Date(
                   sale.createdAt
                 );
@@ -313,7 +322,6 @@ function Dashboard() {
                     className="recent-sale"
                     key={sale._id}
                   >
-
                     <div>
                       <strong>
                         {sale.billNumber}
@@ -331,9 +339,11 @@ function Dashboard() {
                     </div>
 
                     <div className="recent-sale-right">
-
                       <span
-                        className={`payment-badge ${sale.paymentMethod.toLowerCase()}`}
+                        className={`payment-badge ${
+                          sale.paymentMethod
+                            ?.toLowerCase() || ""
+                        }`}
                       >
                         {sale.paymentMethod}
                       </span>
@@ -341,27 +351,21 @@ function Dashboard() {
                       <strong>
                         ₹
                         {Number(
-                          sale.grandTotal
+                          sale.grandTotal || 0
                         ).toFixed(2)}
                       </strong>
-
                     </div>
-
                   </div>
                 );
               })}
-
             </div>
           )}
-
         </section>
 
         {/* Low Stock */}
 
         <section className="dashboard-section">
-
           <div className="section-heading">
-
             <div>
               <h2>Low Stock Alert</h2>
 
@@ -369,33 +373,26 @@ function Dashboard() {
                 Products with 10 or fewer items
               </p>
             </div>
-
           </div>
 
           {lowStockProducts.length === 0 ? (
             <div className="dashboard-empty">
-
               <Package size={35} />
 
               <p>
                 All products have enough stock
               </p>
-
             </div>
           ) : (
             <div className="low-stock-list">
-
               {lowStockProducts
                 .slice(0, 6)
                 .map((product) => (
-
                   <div
                     className="low-stock-item"
                     key={product._id}
                   >
-
                     <div>
-
                       <strong>
                         {product.name}
                       </strong>
@@ -403,24 +400,17 @@ function Dashboard() {
                       <span>
                         {product.category}
                       </span>
-
                     </div>
 
                     <strong className="stock-warning">
                       {product.stock} left
                     </strong>
-
                   </div>
-
                 ))}
-
             </div>
           )}
-
         </section>
-
       </div>
-
     </div>
   );
 }
